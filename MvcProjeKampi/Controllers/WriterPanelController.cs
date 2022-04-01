@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using PagedList.Mvc;
+using PagedList;
 
 namespace MvcProjeKampi.Controllers
 {
@@ -15,17 +17,18 @@ namespace MvcProjeKampi.Controllers
         // GET: WriterPanel
         HeadingManager hm = new HeadingManager(new EfHeadingDal());
         CategoryManager cm = new CategoryManager(new EfCategoryDal());
-        
+            Context c = new Context();
+
         public ActionResult WriterProfile()
         {
             return View();
         }
         public ActionResult MyHeading(string p)
         {
-            Context c = new Context();
             p = (string)Session["WriterMail"];
             var writeridinfo = c.Writers.Where(x => x.WriterMail == p).Select(y => y.WriterID).
                 FirstOrDefault();
+            ViewBag.d = writeridinfo;
             var values = hm.GetListByWriter(writeridinfo);
             return View(values);
         }
@@ -44,6 +47,9 @@ namespace MvcProjeKampi.Controllers
         [HttpPost]
         public ActionResult NewHeading(Heading p)
         {
+            string writermailinfo = (string)Session["WriterMail"];
+            var writeridinfo = c.Writers.Where(x => x.WriterMail == writermailinfo).Select(y => y.WriterID).
+                 FirstOrDefault();           
             p.HeadingDate = DateTime.Parse(DateTime.Now.ToShortDateString());
             p.WriterID = writeridinfo;
             p.HeadingStatus = true;
@@ -76,6 +82,12 @@ namespace MvcProjeKampi.Controllers
             HeadingValue.HeadingStatus = false;
             hm.HeadingDelete(HeadingValue);
             return RedirectToAction("MyHeading");
+        }
+        public ActionResult AllHeading(int p = 1)
+        {
+            //Eklediğim nugetlerle birlikte paging sayfası.
+            var headings = hm.GetList().ToPagedList(p, 4);
+            return View(headings);
         }
     }
 }
