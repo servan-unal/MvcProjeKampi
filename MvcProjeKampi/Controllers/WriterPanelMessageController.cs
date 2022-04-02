@@ -21,14 +21,16 @@ namespace MvcProjeKampi.Controllers
             return View();
         }
 
-        public ActionResult Inbox()
+        public ActionResult Inbox(string p)
         {
-            var messagelist = mm.GetListInbox();
+            p = (string)Session["WriterMail"];
+            var messagelist = mm.GetListInbox(p);
             return View(messagelist);
         }
-        public ActionResult Sendbox()
+        public ActionResult Sendbox(string p)
         {
-            var messagelist = mm.GetListSendbox();
+            p = (string)Session["WriterMail"];
+            var messagelist = mm.GetListSendbox(p);
             return View(messagelist);
         }
 
@@ -55,10 +57,11 @@ namespace MvcProjeKampi.Controllers
         [HttpPost]
         public ActionResult NewMessage(Message p)
         {
+           string sender = (string)Session["WriterMail"];
             ValidationResult results = messagevalidator.Validate(p);
             if (results.IsValid)
             {
-                p.SenderMail = "kadirs@gmail.com";
+                p.SenderMail = sender;
                 p.MessageDate = DateTime.Parse(DateTime.Now.ToShortTimeString());
                 mm.MessageAdd(p);
                 return RedirectToAction("Sendbox");
