@@ -9,6 +9,8 @@ using System.Web;
 using System.Web.Mvc;
 using PagedList.Mvc;
 using PagedList;
+using FluentValidation.Results;
+using BusinessLayer.ValidationRules;
 
 namespace MvcProjeKampi.Controllers
 {
@@ -17,12 +19,41 @@ namespace MvcProjeKampi.Controllers
         // GET: WriterPanel
         HeadingManager hm = new HeadingManager(new EfHeadingDal());
         CategoryManager cm = new CategoryManager(new EfCategoryDal());
-            Context c = new Context();
+        WriterManager wm = new WriterManager(new EfWriterDal());
+        Context c = new Context();
 
-        public ActionResult WriterProfile()
+        [HttpGet]
+
+        public ActionResult WriterProfile(int id = 0)
         {
-            return View();
+            string p = (string)Session["WriterMail"];
+            id = c.Writers.Where(x => x.WriterMail == p).Select(y => y.WriterID).
+                FirstOrDefault();
+            var writervalue = wm.GetByID(id);
+            return View(writervalue);
         }
+
+        [HttpPost]
+        public ActionResult WriterProfile(Writer p)
+        {
+            WriterValidator writervalidator = new WriterValidator();
+            ValidationResult results = writervalidator.Validate(p);
+            if (results.IsValid)
+            {
+                wm.WriterUpdate(p);
+                return RedirectToAction("AllHeading", "WriterPanel");
+            }
+            else
+            {
+                foreach (var item in results.Errors)
+                {
+                    ModelState.AddModelError(item.PropertyName, item.ErrorMessage);
+                }
+            }
+            return View();
+
+        }
+
         public ActionResult MyHeading(string p)
         {
             p = (string)Session["WriterMail"];
@@ -49,7 +80,7 @@ namespace MvcProjeKampi.Controllers
         {
             string writermailinfo = (string)Session["WriterMail"];
             var writeridinfo = c.Writers.Where(x => x.WriterMail == writermailinfo).Select(y => y.WriterID).
-                 FirstOrDefault();           
+                 FirstOrDefault();
             p.HeadingDate = DateTime.Parse(DateTime.Now.ToShortDateString());
             p.WriterID = writeridinfo;
             p.HeadingStatus = true;
@@ -93,7 +124,7 @@ namespace MvcProjeKampi.Controllers
 }
 
 //< customErrors mode = "On" >
- 
+
 //       < error statusCode = "404" redirect = "/ErrorPage/Page404/" />
-    
+
 //        </ customErrors >
