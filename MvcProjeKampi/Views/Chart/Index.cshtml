@@ -3,39 +3,53 @@
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+
 <!DOCTYPE html>
-<html>
-
-<body>
-    <div id="myChart" style="width:100%; max-width:600px; height:500px;">
-    </div>
-
+<html lang="en">
+<head>
+    <title>Result Visualization</title>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script>
-        google.charts.load('current', { 'packages': ['corechart'] });
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
-            var data = google.visualization.arrayToDataTable([
-                ['Contry', 'Mhl'],
-                ['Italy', 54.8],
-                ['France', 48.6],
-                ['Spain', 44.4],
-                ['USA', 23.9],
-                ['Argentina', 14.5]
-            ]);
-
-            var options = {
-                title: 'World Wide Wine Production',
-                is3D: true
+        $(document).ready(function () {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                url: '@Url.Action("CategoryChart", "Chart")',
+                success: function (result) {
+                    google.charts.load('current', {
+                        'packages': ['corechart']
+                    });
+                    google.charts.setOnLoadCallback(function () {
+                        drawChart(result);
+                    });
+                }
+            });
+        });
+        function drawChart(result) {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'CategoryName');
+            data.addColumn('number', 'CategoryCount');
+            var dataArray = [];
+            $.each(result, function (i, obj) {
+                dataArray.push([obj.CategoryName, obj.CategoryCount]);
+            });
+            data.addRows(dataArray);
+            var columnChartOptions = {
+                title: "Kategori - Başlık Grafiği",
+                width: 1000,
+                height: 800,
+                bar: { groupWidth: "20%" },
             };
-
-            var chart = new google.visualization.PieChart(document.getElementById('myChart'));
-            chart.draw(data, options);
+            var columnChart = new google.visualization.PieChart(document
+                .getElementById('Piechart_div'));
+            columnChart.draw(data, columnChartOptions);
         }
     </script>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
+</head>
+<body>
+    <div id="Piechart_div"></div>
 </body>
 </html>
-
-
